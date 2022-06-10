@@ -312,7 +312,7 @@ def best_lBF(n_steps, median_parameters_H1, lBF_init, sBF_init, schedule_JD, t, 
 
 def plot_bestlBF(phase_array, lBF, incert_lBF, best_lBF, dif_lBF, sigma_dif_lBF, calendar_day_best, priority, star, rv, wh):
     ind_best = np.where(lBF == best_lBF)[0][0]
-    fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize = (12, 9))
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize = (12, 6))
     ax.xaxis.set_minor_locator(AutoMinorLocator())
     ax.yaxis.set_minor_locator(AutoMinorLocator())
     ax.tick_params('both', direction = 'in', length = 10, width = 1.5, which = 'major', labelsize = 15)
@@ -326,12 +326,12 @@ def plot_bestlBF(phase_array, lBF, incert_lBF, best_lBF, dif_lBF, sigma_dif_lBF,
     sc = plt.scatter(phase_array, lBF, c = priority[::-1], cmap = color_map, s = 90, edgecolor = 'k')
     cbar = fig.colorbar(sc, ticks = [min(priority) + 0.5, max(priority) - 0.5])
     cbar.ax.set_yticklabels(['Low', 'High'], fontsize = 17)
-    cbar.set_label('Priority', rotation = 270, fontsize = 22)
+    cbar.set_label('Priority', rotation = 270, fontsize = 17)
     cNorm = mpl.colors.Normalize(vmin = min(priority), vmax=max(priority))
     mapper = cm.ScalarMappable(norm = cNorm, cmap=color_map)
     colorerr = [(mapper.to_rgba(p)) for p in priority[::-1]]
     for i in range(len(lBF)):
-        ax.errorbar(phase_array[i], lBF[i], yerr = incert_lBF[i], c = colorerr[i], linestyle="none", lw = 2)
+        ax.errorbar(phase_array[i], lBF[i], yerr = incert_lBF[i], c = colorerr[i], linestyle = "none", lw = 2)
     minlBF = min([min(lBF), best_lBF-dif_lBF[np.where(lBF == best_lBF)[0][0]]])
     ymin = minlBF - (0.2*(abs(minlBF-max(lBF))))
     ymax = max(lBF) + (0.2*(abs(max(lBF)-min(lBF))))
@@ -350,17 +350,17 @@ def plot_bestlBF(phase_array, lBF, incert_lBF, best_lBF, dif_lBF, sigma_dif_lBF,
     else:
         ytext = best_lBF - 0.36*delta_ylim
         ytext2 = best_lBF - 0.39*delta_ylim
-    plt.text(phase_array[np.where(lBF == best_lBF)[0][0]] + 0.005, ytext, fr'$\phi$ = {np.round(phase_array[np.where(lBF == best_lBF)[0][0]], 2)}', color = 'gray',
+    plt.text(phase_array[np.where(lBF == best_lBF)[0][0]] + 0.01, ytext, fr'$\phi$ = {np.round(phase_array[np.where(lBF == best_lBF)[0][0]], 2)}', color = 'gray',
     fontsize = 15, rotation = 90)
-    plt.text(phase_array[np.where(lBF == best_lBF)[0][0]] - 0.02, ytext2, f'{calendar_day_best}', color = 'gray', fontsize = 15, rotation = 90)
+    plt.text(phase_array[np.where(lBF == best_lBF)[0][0]] - 0.03, ytext2, f'{calendar_day_best}', color = 'gray', fontsize = 15, rotation = 90)
     xyA = (xtext2 + 0.03, best_lBF)
     xyB = (xtext2 + 0.03, best_lBF - dif_lBF[np.where(lBF == best_lBF)[0][0]])
     coordsA = "data"
     coordsB = "data"
     con1 = ConnectionPatch(xyA, xyB, coordsA, coordsB, arrowstyle="<|-|>", shrinkA = 5, shrinkB = 5, mutation_scale = 20, fc = "gray", color = 'gray')
     ax.add_artist(con1)
-    plt.text(xtext2 + 0.01, (2*best_lBF - dif_lBF[ind_best])/2 - 0.22*delta_ylim, f'$\Delta$ $\ln$(B$_{{10}}$) = {round(dif_lBF[ind_best],2)} $\pm$ {round(sigma_dif_lBF[ind_best],2)}', color = 'gray', fontsize = 15, rotation = 90)
-    ax.set_xlabel(r'$\phi$', fontsize = 22)
-    ax.set_ylabel(f'$\ln$(B$_{{10}}$)', fontsize = 22)
-    plt.xlim(0,1)
+    plt.text(xtext2 - 0.01, (2*best_lBF - dif_lBF[ind_best])/2 - 0.22*delta_ylim, f'$\Delta$ $\ln$(B$_{{10}}$) = {round(dif_lBF[ind_best],2)} $\pm$ {round(sigma_dif_lBF[ind_best],2)}', color = 'gray', fontsize = 15, rotation = 90)
+    ax.set_xlabel(r'$\phi$', fontsize = 17)
+    ax.set_ylabel(f'$\ln$(B$_{{10}}$)', fontsize = 17)
+    plt.xlim(-0.05, 1.05)
     plt.savefig(f'Output/Figure/lBF_KOBEsim_{star}_wh{wh}_Obs#{len(rv) + 1}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
