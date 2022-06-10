@@ -21,8 +21,6 @@ from matplotlib.patches import ConnectionPatch
 #=====================================
 # Model and functions to run the MCMC
 #=====================================
-
-
 """
 Parameters of the RV model:
 ---------------------------
@@ -203,6 +201,8 @@ def plot_fitMCMC(t, rv, erv, star, flatsamples, param_names, wh):
     ax2.yaxis.set_minor_locator(AutoMinorLocator())
     ax2.tick_params('both', direction = 'in', length = 10, width = 1.5, which = 'major', labelsize = 15)
     ax2.tick_params('both', direction = 'in', length = 5, width = 0.5, which = 'minor')
+    if not os.path.exists('Output/Figure'):
+        os.makedirs('Output/Figure')
     plt.savefig(f'Output/Figure/fit_{star}_wh{wh}_Obs#{len(rv)}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
 
     fig = corner.corner(flatsamples, labels = param_names)
@@ -306,6 +306,8 @@ def best_lBF(n_steps, median_parameters_H1, lBF_init, sBF_init, schedule_JD, t, 
     df = pd.DataFrame({'Calendar_day':cday[np.argsort(dif_lBF_weig)[::-1]], 'JD':t_cand_array[np.argsort(dif_lBF_weig)[::-1]], 'phase': ph_reshape[np.argsort(dif_lBF_weig)[::-1]],
     'lBF': np.round(lBF[np.argsort(dif_lBF_weig)[::-1]],3), 'sigma_lBF': np.round(slBF[np.argsort(dif_lBF_weig)[::-1]],3),
     'delta_lBF': np.round(dif_lBF_original[np.argsort(dif_lBF_weig)[::-1]],3), 'sigma_delta_lBF': np.round(s_dif_lBF_original[np.argsort(dif_lBF_weig)[::-1]],3)})
+    if not os.path.exists('Output/File'):
+        os.makedirs('Output/File')
     df.to_csv(f'Output/File/{star}_KOBEsim_Obs#{len(rv)+1}.csv', index=False)
     priority = df.index.values
 
@@ -365,4 +367,6 @@ def plot_bestlBF(phase_array, lBF, incert_lBF, best_lBF, dif_lBF, sigma_dif_lBF,
     ax.set_xlabel(r'$\phi$', fontsize = 17)
     ax.set_ylabel(f'$\ln$(B$_{{10}}$)', fontsize = 17)
     plt.xlim(-0.05, 1.05)
+    if not os.path.exists('Output/Figure'):
+        os.makedirs('Output/Figure')
     plt.savefig(f'Output/Figure/lBF_KOBEsim_{star}_wh{wh}_Obs#{len(rv) + 1}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
