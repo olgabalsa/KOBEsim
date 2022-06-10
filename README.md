@@ -1,6 +1,5 @@
 # KOBEsim-code
-
-Bayesian algortithm to increase the observational strategy efficiency in RV surveys. Given a hypothesis of a planet orbiting at a period P, the algorithm finds the optimum next observing date taking into account the syrvey's schedule. KOBEsim uses a weighted Bayes factor as metric to find a trade-off between the number of observations and the timespan required to detect the hypothetical planet (O. Balsalobre-Ruza et al., submitted).
+Bayesian algorithm to increase the observational strategy efficiency in RV surveys. Given a hypothesis of a planet orbiting at a particular period, the algorithm finds the optimum next observing date considering the survey's schedule. KOBEsim uses a weighted Bayes factor as metric to find a trade-off between the number of observations and the timespan required to detect the hypothetical planet (O. Balsalobre-Ruza et al., submitted).
 
 
 <p align="center">
