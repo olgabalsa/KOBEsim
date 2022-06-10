@@ -102,12 +102,12 @@ print(f'Initial ln(B01) = {round(lBF_init,3)} +- {round(slBF_init,3)}')
 # Select best next phase to observe
 n_phase_cand, lBF_cand, slBF_cand, best_phase, best_t, priority =  run_MCMC.best_lBF(n_steps, median_parameters_H1, lBF_init, slBF_init, schedule_JD, jd, rv, erv, Priors, prior_type, min_alt, t_exp, obs, star, Nph, beta, beta_param, max_days_apart)
 ind_best = np.where(n_phase_cand == best_phase)[0][0]
-cday = Time(math.floor(best_t), format = 'jd', scale = 'utc').isot
+cday = Time(math.floor(best_t), format = 'jd', scale = 'utc').isot[:10]
 run_MCMC.plot_bestlBF(n_phase_cand, lBF_cand, slBF_cand, lBF_cand[ind_best], lBF_cand - lBF_init, np.sqrt(slBF_cand**2 + slBF_init**2), cday, priority, star, rv, wh)
 
 print(f'TARGET {star}')
 print('-------------------------')
 print(f'Optimal phase = {round(best_phase,3)}')
-print(f'Optimal next observing date around {round(best_t,3)} JD -> {cday[:10]}')
+print(f'Optimal next observing date around {round(best_t,3)} JD -> {cday}')
 print(f'Predicted Deltaln(B01) = {round(lBF_cand[ind_best] - lBF_init,3)} +- {round(np.sqrt(slBF_cand[ind_best]**2 + slBF_init**2),3)}')
 print(f'Predicted ln(B01) = {round(lBF_cand[ind_best],3)} +- {round(slBF_cand[ind_best],3)}')
