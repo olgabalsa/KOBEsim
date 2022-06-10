@@ -22,7 +22,7 @@ from matplotlib.patches import ConnectionPatch
 # Model and functions to run the MCMC
 #=====================================
 
-#=====================================
+
 """
 Parameters of the RV model:
 ---------------------------
