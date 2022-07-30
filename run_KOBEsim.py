@@ -7,11 +7,12 @@ import math
 
 
 """
-KOBEsim finds the next optimum date to observe a given target to maximize the efficiency of the RV observations based on Bayesian evidence (O. Balsalobre-Ruza et al., 2022).
+KOBEsim finds the next optimum date to observe a given target to maximize the efficiency of the RV observations based on Bayesian evidence (O. Balsalobre-Ruza et al., submitted).
 
 INPUT Parameters
 ================
-- obs*: observatory coordinates and altitude -> latitude(deg) longitude(deg) height(m)
+- obs(*): observatory coordinates and altitude -> latitude(deg) longitude(deg) height(m)
+- obs_n(*): observatory name to obtain the coordinates with astropy. Note: just one of the inputs obs or obs_n is mandatory.
 - star*: name of the star to search for coordinates with simbad
 - file*: if ASCII -> columns: jd, rv, erv; If FITS -> columns: data['OBJ_DATE_BJD'], data['SPECTRO_CCF_RV'], data['SPECTRO_CCF_RV_ERR']. Units RV and ERV in m/s.
 - sch: ASCII file with the schedule of the program (unique columns with JD). If not given, every date can be a candidate.
@@ -21,13 +22,14 @@ INPUT Parameters
 - texp: exposure time. Default: 700 s.
 - Nph: number of orbital sub-phases to compare. Default: 20.
 - beta: prioritize observing in closest dates by means of weighting the increase in the Bayes factor with a beta function. True as default.
-- ab: Parameters of the beta function. Default: Beta(a = 1, b = 5).
+- ab: parameters of the beta function. Default: Beta(a = 1, b = 5).
 - wh: whitening. True to substract a linear and a quadratic trend on the data. Default: False.
-- max_da: maximum days apart searching for the next optimum observing date. Default: 90 d.
-- n: Number of steps per walker for the emcee warm-up phase. Default: 20 000
+- max_da: maximum days apart to search for the next optimum observing date. Default: 90 d.
+- n: number of steps per walker for the emcee warm-up phase. Default: 20 000
+- nw: multiple of the number of parameters for the number of walkers (Number of walkers = nw * number of parameters). Default: 4.
 
 *: Mandatory inputs.
-
+(*): One of the two options is mandatory.
 Returns
 =======
 - CSV file with the candidate dates to be the next observation sorted by priority.
@@ -43,7 +45,7 @@ NOTE: hereafter lBF is ln(B_10) = ln(evidence_planet_hypothesys) - ln(evidence_n
 
 #            Inputs
 #---------------------------------
-obs, star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, beta_param, wh, max_days_apart, n_steps = inputs.get()
+obs, star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, beta_param, wh, max_days_apart, n_steps, mult_nw = inputs.get()
 schedule_JD = ext_data.extract_schedule(path_sch)
 jd, rv, erv = ext_data.extract_rv(path_rv)
 
@@ -52,6 +54,7 @@ jd, rv, erv = ext_data.extract_rv(path_rv)
 #---------------------------------
 # u -> uniform prior -> [from, to]
 # g -> gaussian prior -> [mean, sd]
+# gt -> gaussian truncated prior -> [mean, sd, min, max]
 def Prior_def(t, t0_input, P_peak):
     if t0_input != None:
         t0_prior_type = 'g'
@@ -60,8 +63,8 @@ def Prior_def(t, t0_input, P_peak):
         t0_prior_type = 'u'
         t0_prior_value = [t[0], t[0] + P_peak]
 
-    prior_type = {'Vsys': 'u', 'P': 'g', 'K': 'u', 't0': t0_prior_type, 'e': 'u', 'w': 'u', 'jitter': 'u', 'm': 'u', 'q': 'u'}
-    Priors = {'Vsys':[-1e9, 1e9], 'P':[P_peak, 2], 'K':[0, 1e4], 't0': t0_prior_value, 'e':[0, 1], 'w':[0, np.pi], 'jitter':[0, 100], 'm':[-100, 100], 'q':[-100, 100]}
+    prior_type = {'Vsys': 'u', 'P': 'g', 'K': 'u', 't0': t0_prior_type, 'secosw': 'gt', 'sesinw': 'gt', 'jitter': 'u', 'm': 'u', 'q': 'u'}
+    Priors = {'Vsys':[-1e9, 1e9], 'P':[P_peak, 2], 'K':[0, 1e4], 't0': t0_prior_value, 'sesinw':[0, 0.3, -1, 1], 'secosw':[0, 0.3, -1, 1], 'jitter':[0, 100], 'm':[-100, 100], 'q':[-100, 100]}
     return Priors, prior_type
 
 
@@ -72,7 +75,7 @@ def Prior_def(t, t0_input, P_peak):
 
 if P_peak == None:
     Priors, prior_type = Prior_def(jd, t0_input, P_peak = 250) # temporary priors to run the prewhitening
-    P_peak, rv = ext_data.periodogram_Ppeak(n_steps, jd, rv, erv, Priors, prior_type, wh)
+    P_peak, rv = ext_data.periodogram_Ppeak(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, wh)
     P_peak_from_periodogram = True
 else:
     P_peak_from_periodogram = False
@@ -80,16 +83,14 @@ else:
 Priors, prior_type = Prior_def(jd, t0_input, P_peak)
 
 
-
 # Initial lBF
 print(f'Fit H0 and H1 models for {star} data')
-flatsamples_H1, ev_H1_init, rv_wh, paramnamesH1 = run_MCMC.fitMCMC(n_steps, jd, rv, erv, Priors, prior_type, planet = True, wh = wh)
+flatsamples_H1, ev_H1_init, rv_wh, paramnamesH1 = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, planet = True, wh = wh)
 if wh and not P_peak_from_periodogram:   # If P_peak_from_periodogram, prewhitening already done
     rv = rv_wh
-    flatsamples_H1, ev_H1_init, _, paramnamesH1 = run_MCMC.fitMCMC(n_steps, jd, rv, erv, Priors, prior_type, planet = True)
+    flatsamples_H1, ev_H1_init, _, paramnamesH1 = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, planet = True)
 
-flatsamples_H0, ev_H0_init, _, _ = run_MCMC.fitMCMC(n_steps, jd, rv, erv, Priors, prior_type, planet = False)
-median_parameters_H1 = np.median(flatsamples_H1, axis = 0)
+flatsamples_H0, ev_H0_init, _, _ = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, planet = False)
 
 # Fit and Corner plots
 run_MCMC.plot_fitMCMC(jd, rv, erv, star, flatsamples_H1, paramnamesH1, wh)
@@ -100,14 +101,14 @@ print(f'Initial ln(B01) = {round(lBF_init,3)} +- {round(slBF_init,3)}')
 
 
 # Select best next phase to observe
-n_phase_cand, lBF_cand, slBF_cand, best_phase, best_t, priority =  run_MCMC.best_lBF(n_steps, median_parameters_H1, lBF_init, slBF_init, schedule_JD, jd, rv, erv, Priors, prior_type, min_alt, t_exp, obs, star, Nph, beta, beta_param, max_days_apart)
+n_phase_cand, lBF_cand, slBF_cand, best_phase, best_t, priority =  run_MCMC.best_lBF(n_steps, mult_nw, flatsamples_H1, lBF_init, slBF_init, schedule_JD, jd, rv, erv, Priors, prior_type, min_alt, t_exp, obs, star, Nph, beta, beta_param, max_days_apart)
 ind_best = np.where(n_phase_cand == best_phase)[0][0]
 cday = Time(math.floor(best_t), format = 'jd', scale = 'utc').isot[:10]
 run_MCMC.plot_bestlBF(n_phase_cand, lBF_cand, slBF_cand, lBF_cand[ind_best], lBF_cand - lBF_init, np.sqrt(slBF_cand**2 + slBF_init**2), cday, priority, star, rv, wh)
 
 print(f'TARGET {star}')
 print('-------------------------')
-print(f'Optimal phase = {round(best_phase,3)}')
-print(f'Optimal next observing date around {round(best_t,3)} JD -> {cday}')
+print(f'Optimum phase = {round(best_phase,3)}')
+print(f'Optimum next observing date around {round(best_t,3)} JD -> {cday}')
 print(f'Predicted Deltaln(B01) = {round(lBF_cand[ind_best] - lBF_init,3)} +- {round(np.sqrt(slBF_cand[ind_best]**2 + slBF_init**2),3)}')
 print(f'Predicted ln(B01) = {round(lBF_cand[ind_best],3)} +- {round(slBF_cand[ind_best],3)}')

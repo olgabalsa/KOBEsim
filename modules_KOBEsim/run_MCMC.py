@@ -21,6 +21,8 @@ from matplotlib.patches import ConnectionPatch
 #=====================================
 # Model and functions to run the MCMC
 #=====================================
+
+
 """
 Parameters of the RV model:
 ---------------------------
@@ -32,19 +34,29 @@ Parameters of the RV model:
 - w: argument of the periastron (rad)
 - m: parameter of the linear trend
 - q: parameter of the quadratic trend
+-----------------------------
+We use a parametrization with 1) secosw = np.sqrt(e)*np.cos(w), and 2) sesinw = np.sqrt(e)*np.sin(w) to avoid problems in the sampling since the priors of these new parameters can be gaussian centered in 0.
 """
 
 
-def model_RV(Vsys, P, K, t0, e, w, m, q, t, planet, wh):
-    RV = Vsys
-    if planet:
-        tperi = radvel.orbit.timetrans_to_timeperi(t0, P, e, w)
-        keplerian = radvel.kepler.rv_drive(np.array(t), [P, tperi, e, w, K])
-        RV += keplerian
-        if wh:
-            RV += m*(t - t0) + q*(t - t0)**2   # whitening
-
-    return RV
+def model_RV(Vsys, P, K, t0, secosw, sesinw, t, planet):
+    try:
+        RV_array = np.zeros((len(P), len(t)))
+    except:
+        RV_array = np.zeros((1, len(t)))
+    for i in range(RV_array.shape[0]):
+        RV = Vsys[i]
+        if planet:
+            params = radvel.model.Parameters(num_planets = 1, basis = 'per tc secosw sesinw k')
+            params['per1'].value = P[i]
+            params['k1'].value = K[i]
+            params['tc1'].value = t0[i]
+            params['secosw1'].value = secosw[i]
+            params['sesinw1'].value = sesinw[i]
+            keplerian = radvel.model._standard_rv_calc(t, params, radvel.model.Vector(params))
+            RV += keplerian
+        RV_array[i, :] = RV
+    return RV_array
 
 
 def log_likelihood(theta, t, rv, erv, planet, wh):
@@ -56,14 +68,14 @@ def log_likelihood(theta, t, rv, erv, planet, wh):
     for s in range(shape_theta[0]):
         if planet:
             if wh:
-                Vsys, P, K, t0, e, w, jitter, m, q = theta[s]
+                Vsys, P, K, t0, secosw, sesinw, jitter, m, q = theta[s]
             else:
-                Vsys, P, K, t0, e, w, jitter = theta[s]
+                Vsys, P, K, t0, secosw, sesinw, jitter = theta[s]
                 m, q = 0, 0
         else:
             Vsys, jitter = theta[s]
-            P, K, t0, e , w, m, q = 0, 0, 0, 0, np.pi/2, 0, 0
-        model = model_RV(Vsys, P, K, t0, e, w, m, q, t, planet, wh)
+            P, K, t0, secosw, sesinw, m, q = 0, 0, 0, 0, 0, 0, 0
+        model = model_RV([Vsys], [P], [K], [t0], [secosw], [sesinw], t, planet)
         sigma2 = erv ** 2 + jitter ** 2
         log_like[s] = -0.5 * (len(t)*np.log(2*np.pi) + np.sum((rv - model) ** 2 / sigma2 + np.log(sigma2)))
 
@@ -82,6 +94,8 @@ def log_prior(theta, Priors, prior_type, param_names):
             if prior_type[p_name] == 'u' and Priors[p_name][0] < param < Priors[p_name][1]:
                 log_pr[s] += np.log(1.0/(Priors[p_name][1] - Priors[p_name][0]))
             elif prior_type[p_name] == 'g' and param > 0:
+                log_pr[s] += np.log(1.0/(np.sqrt(2.0*np.pi)*Priors[p_name][1])) - 0.5*(param-Priors[p_name][0])**2/Priors[p_name][1]**2
+            elif prior_type[p_name] == 'gt' and Priors[p_name][2] < param < Priors[p_name][3]:
                 log_pr[s] += np.log(1.0/(np.sqrt(2.0*np.pi)*Priors[p_name][1])) - 0.5*(param-Priors[p_name][0])**2/Priors[p_name][1]**2
             else:
                 log_pr[s] += -np.inf
@@ -102,23 +116,28 @@ def log_probability(theta, t, rv, erv, Priors,  prior_type, param_names, planet,
 #======================
 
 
-def fitMCMC(n_steps, t, rv, erv, Priors, prior_type, planet, wh = False):
+def fitMCMC(n_steps, mult_nw, t, rv, erv, Priors, prior_type, planet, wh = False):
     fraction_samples = 0.15
     if planet:
-        param_names = ['Vsys', 'P', 'K', 't0', 'e', 'w', 'jitter']
+        param_names = ['Vsys', 'P', 'K', 't0', 'secosw', 'sesinw', 'jitter']
         if wh:
             param_names.append('m')
             param_names.append('q')
     else:
         param_names = ['Vsys', 'jitter']
     ndim  = len(param_names)
-    nwalkers = 4*ndim
+    nwalkers =  mult_nw * ndim
 
     for p_name in param_names:
         if prior_type[p_name] == 'u':
             p0_n = [np.random.uniform(Priors[p_name][0], Priors[p_name][1], nwalkers)]
         elif prior_type[p_name] == 'g':
             p0_n = [np.random.normal(loc = Priors[p_name][0], scale = 0.2, size = nwalkers)]
+        elif prior_type[p_name] == 'gt':
+            param_val = [np.random.normal(loc = Priors[p_name][0], scale = 0.2, size = nwalkers)]
+            while np.any(np.abs(param_val) > 1):
+                param_val = [np.random.normal(loc = Priors[p_name][0], scale = 0.2, size = nwalkers)]
+            p0_n = param_val
         try:
             p0 = np.concatenate((p0, p0_n), axis = 0)
         except:
@@ -132,7 +151,7 @@ def fitMCMC(n_steps, t, rv, erv, Priors, prior_type, planet, wh = False):
 
     flat_samples = sampler.get_chain(flat = True)
 
-    method_args = {'nbins':100, 'nsamples': int(fraction_samples*n_steps/2), 'densityestimation': 'histogram'}
+    method_args = {'nbins':100, 'nsamples': int(fraction_samples * n_steps/2), 'densityestimation': 'histogram'}
     ev = run_montecarlo(flat_samples, log_likelihood, log_prior, ([t, rv, erv, planet, wh]), ([Priors, prior_type, param_names]), method_args, estimator='perrakis', nmc=50)
 
     if wh:
@@ -144,20 +163,19 @@ def fitMCMC(n_steps, t, rv, erv, Priors, prior_type, planet, wh = False):
 
 
 def do_whitening(flatsamples_wh, rv_prewh, t):
-    Vsys, P, K, t0, e, w, jitter, m, q = np.median(flatsamples_wh, axis=0)
-    rv_wh = rv_prewh - model_RV(0, P, 0, t0, e, w, m, q, t, planet = True, wh = True)
+    Vsys, P, K, t0, secosw, sesinw, jitter, m, q = np.median(flatsamples_wh, axis=0)
+    rv_wh = rv_prewh - model_RV(0, [P], 0, [t0], [secosw], [sesinw], t, True)
 
     return rv_wh
 
 
 def plot_fitMCMC(t, rv, erv, star, flatsamples, param_names, wh):
-    median_parameters_H1 = np.median(flatsamples, axis = 0)
     t_plot = np.linspace(t[0], t[-1], 2*int(t[-1]-t[0]))
-    Vsys, P, K, t0, e, w, jitter = median_parameters_H1[:7]
+    Vsys, P, K, t0, secosw, sesinw, jitter = flatsamples[:, :7].T
     m, q = 0, 0
 
-    phase = ((np.array(t) - t0) % P) / P
-    RV_fit = model_RV(Vsys, P, K, t0, e, w, m, q, t_plot, True, False)
+    phase = ((np.array(t) - np.median(t0)) % np.median(P)) / np.median(P)
+    RV_fit = model_RV(Vsys, P, K, t0, secosw, sesinw, t_plot, True)
 
     plt.figure(figsize = (12, 9))
     gs = gridspec.GridSpec(2, 1, height_ratios = [3, 1])
@@ -165,27 +183,20 @@ def plot_fitMCMC(t, rv, erv, star, flatsamples, param_names, wh):
     ax1 = plt.subplot(gs[0])
     ax1.scatter(t, rv, c = 'm', s = 60, label = 'RV data')
     ax1.errorbar(t, rv, yerr = erv, c = 'm', linestyle = "none")
-    ax1.plot(t_plot, RV_fit, linewidth = 2, c = 'black', label = '$H_1$')
-    ax1.plot(t_plot, np.full(shape = len(t_plot), fill_value = Vsys), linewidth = 2, linestyle = 'dashdot', c = 'black', label = '$H_0$')
+
+    muH1, sigmaH1 = RV_fit.mean(0), RV_fit.std(0)
+    muH0, sigmaH0 = Vsys.mean(0), Vsys.std(0)
+    ax1.plot(t_plot, muH1, linewidth = 2, c = 'black', label = '$H_1$')
+    ax1.plot(t_plot, np.full(shape = len(t_plot), fill_value = muH0), linewidth = 2, linestyle = 'dashdot', c = 'black', label = '$H_0$')
     ax1.set_ylabel('RV (m/s)', fontsize = 20)
     ax1.legend(loc = 4, fontsize = 17)
     ax1.set_xticklabels([])
-
-    # plot confidence intervals
-    y_models = []
-    inds = np.random.randint(len(flatsamples), size = 1000)
-    for ind2 in inds:
-        Vsys, P, K, t0, e, w, jitter = median_parameters_H1[:7]
-        y_model = model_RV(Vsys, P, K, t0, e, w, m, q, t_plot, True, False)
-        y_models.append(y_model)
-    y_models = np.array(y_models)
-    mu,sigma1 = y_models.mean(0), y_models.std(0)
-    ax1.fill_between(t_plot, mu - 2 * sigma1, mu + 2 * sigma1, alpha = 0.1, color = 'grey')
-    ax1.fill_between(t_plot, mu - sigma1, mu + sigma1, alpha = 0.2, color = 'grey')
+    ax1.fill_between(t_plot, muH1 - 2 * sigmaH1, muH1 + 2 * sigmaH1, alpha = 0.1, color = 'grey')
+    ax1.fill_between(t_plot, muH1 - sigmaH1, muH1 + sigmaH1, alpha = 0.2, color = 'grey')
 
     # residuals
     ind = [np.where(np.round(t_plot) == np.round(t)[i])[0][0] for i in range(len(t))]
-    residuals = rv - RV_fit[ind]
+    residuals = rv - muH1[ind]
     ax2 = plt.subplot(gs[1])
     ax2.scatter(t, residuals, s = 15, color = 'black')
     ax2.hlines(0, t[0], t[-1], linestyle = 'dotted', color = 'black')
@@ -201,12 +212,12 @@ def plot_fitMCMC(t, rv, erv, star, flatsamples, param_names, wh):
     ax2.yaxis.set_minor_locator(AutoMinorLocator())
     ax2.tick_params('both', direction = 'in', length = 10, width = 1.5, which = 'major', labelsize = 15)
     ax2.tick_params('both', direction = 'in', length = 5, width = 0.5, which = 'minor')
-    if not os.path.exists('Output/Figure'):
-        os.makedirs('Output/Figure')
-    plt.savefig(f'Output/Figure/fit_{star}_wh{wh}_Obs#{len(rv)}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
+    if not os.path.exists('Output/Figures'):
+        os.makedirs('Output/Figures')
+    plt.savefig(f'Output/Figures/fit_{star}_wh{wh}_Obs#{len(rv)}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
 
     fig = corner.corner(flatsamples, labels = param_names)
-    plt.savefig(f'Output/Figure/Corner_posteriors_{star}_wh{wh}_Obs#{len(rv)}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
+    plt.savefig(f'Output/Figures/Corner_posteriors_{star}_wh{wh}_Obs#{len(rv)}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
 
 
 #======================
@@ -223,11 +234,11 @@ def beta_difdays(lBF_init, lBF, dif_days, beta_param):
     return dif_lBF_weig
 
 
-def best_lBF(n_steps, median_parameters_H1, lBF_init, sBF_init, schedule_JD, t, rv, erv, Priors, prior_type, min_alt, t_exp, obs, star, Nph, beta, beta_param, max_days_apart):
-    Vsys, P, K, t0, e, w, jitter =  median_parameters_H1[:7]
+def best_lBF(n_steps, mult_nw, flatsamples_H1, lBF_init, sBF_init, schedule_JD, t, rv, erv, Priors, prior_type, min_alt, t_exp, obs, star, Nph, beta, beta_param, max_days_apart):
+    Vsys, P, K, t0, secosw, sesinw, jitter = flatsamples_H1[:, :7].T
     m, q  = 0, 0
 
-    phase_array, t_cand_array = SimulTime.time_sim(min_alt, t_exp, obs, star, schedule_JD, t0, P, t, Nph, max_days_apart)
+    phase_array, t_cand_array = SimulTime.time_sim(min_alt, t_exp, obs, star, schedule_JD, np.median(t0), np.median(P), t, Nph, max_days_apart)
     t_before = t[-1]
 
     rv_cand_array = np.array([])
@@ -251,8 +262,14 @@ def best_lBF(n_steps, median_parameters_H1, lBF_init, sBF_init, schedule_JD, t, 
 
         t_new = t_cand_array[ind]
         number_phase += 1
-        rv_new = model_RV(Vsys, P, K, t0, e, w, m, q, t = [t_new], planet = True, wh = False)
-        erv_new = np.median(erv)
+
+        rv_new_array = model_RV(Vsys, P, K, t0, secosw, sesinw, np.array([t_new]), True)
+        rv_new = rv_new_array.mean(0)
+
+        erv_mcmc = rv_new_array.std(0)
+        erv_gaussian = np.random.normal(loc = np.median(erv), scale = np.std(erv))
+        erv_new = np.sqrt(erv_mcmc**2 + erv_gaussian**2)
+
         rv_cand_array = np.append(rv_cand_array, rv_new)
         erv_cand_array = np.append(erv_cand_array, erv_new)
 
@@ -261,11 +278,11 @@ def best_lBF(n_steps, median_parameters_H1, lBF_init, sBF_init, schedule_JD, t, 
         erv =  np.append(erv, erv_new)
 
         print(f'{star}: KOBEsim testing orbital phase {number_phase}/{len(t_cand_array[t_cand_array!= 0])}')
-        flatsamples_H1_new, ev_H1_new, _, _ = fitMCMC(n_steps, t, rv, erv, Priors, prior_type, planet = True, wh = False)
+        flatsamples_H1_new, ev_H1_new, _, _ = fitMCMC(n_steps, mult_nw, t, rv, erv, Priors, prior_type, planet = True, wh = False)
         ev_H1_array = np.append(ev_H1_array, np.median(ev_H1_new))
         sev_H1_array = np.append(sev_H1_array, np.std(ev_H1_new))
 
-        flatsamples_H0_new, ev_H0_new, _, _ = fitMCMC(n_steps, t, rv, erv, Priors, prior_type, planet = False, wh = False)
+        flatsamples_H0_new, ev_H0_new, _, _ = fitMCMC(n_steps, mult_nw, t, rv, erv, Priors, prior_type, planet = False, wh = False)
         ev_H0_array = np.append(ev_H0_array, np.median(ev_H0_new))
         sev_H0_array = np.append(sev_H0_array, np.std(ev_H0_new))
 
@@ -306,9 +323,9 @@ def best_lBF(n_steps, median_parameters_H1, lBF_init, sBF_init, schedule_JD, t, 
     df = pd.DataFrame({'Calendar_day':cday[np.argsort(dif_lBF_weig)[::-1]], 'JD':t_cand_array[np.argsort(dif_lBF_weig)[::-1]], 'phase': ph_reshape[np.argsort(dif_lBF_weig)[::-1]],
     'lBF': np.round(lBF[np.argsort(dif_lBF_weig)[::-1]],3), 'sigma_lBF': np.round(slBF[np.argsort(dif_lBF_weig)[::-1]],3),
     'delta_lBF': np.round(dif_lBF_original[np.argsort(dif_lBF_weig)[::-1]],3), 'sigma_delta_lBF': np.round(s_dif_lBF_original[np.argsort(dif_lBF_weig)[::-1]],3)})
-    if not os.path.exists('Output/File'):
-        os.makedirs('Output/File')
-    df.to_csv(f'Output/File/{star}_KOBEsim_Obs#{len(rv)+1}.csv', index=False)
+    if not os.path.exists('Output/Files'):
+        os.makedirs('Output/Files')
+    df.to_csv(f'Output/Files/{star}_KOBEsim_Obs#{len(rv)+1}.csv', index=False)
     priority = df.index.values
 
     return phase_array, lBF, slBF, best_phase, best_t, priority
@@ -328,7 +345,7 @@ def plot_bestlBF(phase_array, lBF, incert_lBF, best_lBF, dif_lBF, sigma_dif_lBF,
     color_map = 'winter'
 
     sc = plt.scatter(phase_array, lBF, c = priority[::-1], cmap = color_map, s = 90, edgecolor = 'k')
-    cbar = fig.colorbar(sc, ticks = [min(priority) + 0.5, max(priority) - 0.5])
+    cbar = fig.colorbar(sc, ticks = [min(priority), max(priority)])
     cbar.ax.set_yticklabels(['Low', 'High'], fontsize = 17)
     cbar.set_label('Priority', rotation = 270, fontsize = 17)
     cNorm = mpl.colors.Normalize(vmin = min(priority), vmax=max(priority))
@@ -367,6 +384,6 @@ def plot_bestlBF(phase_array, lBF, incert_lBF, best_lBF, dif_lBF, sigma_dif_lBF,
     ax.set_xlabel(r'$\phi$', fontsize = 17)
     ax.set_ylabel(f'$\ln$(B$_{{10}}$)', fontsize = 17)
     plt.xlim(-0.05, 1.05)
-    if not os.path.exists('Output/Figure'):
-        os.makedirs('Output/Figure')
-    plt.savefig(f'Output/Figure/lBF_KOBEsim_{star}_wh{wh}_Obs#{len(rv) + 1}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)
+    if not os.path.exists('Output/Figures'):
+        os.makedirs('Output/Figures')
+    plt.savefig(f'Output/Figures/lBF_KOBEsim_{star}_wh{wh}_Obs#{len(rv) + 1}.pdf', dpi = 300, bbox_inches = 'tight', pad_inches = 0.2)

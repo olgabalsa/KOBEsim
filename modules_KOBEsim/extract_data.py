@@ -20,9 +20,9 @@ def extract_rv(path_rv):
         file = fits.open(path_file)
         jd = file[1].data['OBJ_DATE_BJD'] + 2400000
         rv = file[1].data['SPECTRO_CCF_RV']
-        erv =  file[1].data['SPECTRO_CCF_erv']
+        erv =  file[1].data['SPECTRO_CCF_ERV']
     except: # ASCII
-        df_data = pd.read_csv(path_rv, names = ['jd','rv','erv'], header = 0, delimiter = "\t", index_col = False, comment = '#')
+        df_data = pd.read_csv(path_rv, names = ['jd','rv','erv'], header = 0, delimiter = " ", index_col = False, comment = '#')
         jd = df_data.jd.values
         rv = df_data.rv.values
         erv = df_data.erv.values
@@ -38,10 +38,10 @@ def extract_schedule(path_sch):
     return schedule_JD
 
 
-def periodogram_Ppeak(n_steps, t, rv, erv, Priors, prior_type, whitening):
+def periodogram_Ppeak(n_steps, mult_nw, t, rv, erv, Priors, prior_type, whitening):
     if whitening:
         rv_prewh = rv
-        flatsamples_wh, ev, rv = run_MCMC.fitMCMC(n_steps, t, rv, erv, Priors, prior_type, planet = True, wh = whitening)
+        flatsamples_wh, ev, rv = run_MCMC.fitMCMC(n_steps, mult_nw, t, rv, erv, Priors, prior_type, planet = True, wh = whitening)
 
         # Plot before and after the prewhitening
         fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize = (6.93, 5.5))

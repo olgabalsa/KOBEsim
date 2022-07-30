@@ -4,8 +4,9 @@ import sys
 def get():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-obs", "--observatory_coordinates", nargs=3, type = float, metavar = ('lat','long','alt'), help = "list: [Latitude (deg), Longitude (deg), Height (m)]", required = True)
-    parser.add_argument("-star", "--star_name", default = None, help = "name of the star to search for coordinates with simbad")
+    parser.add_argument("-obs", "--observatory_coordinates", nargs=3, type = float, default = None, metavar = ('lat','long','alt'), help = "List: [Latitude (deg), Longitude (deg), Height (m)]")
+    parser.add_argument("-obs_n", "--observatory_name", default = None, help = "Name of the observatory to get the coordinates from EarthLocation (astropy).")
+    parser.add_argument("-star", "--star_name", default = None, help = "Name of the star to search for coordinates with simbad")
     parser.add_argument("-file", "--file_path", default = None, help = "Path of your File with the RV Data gathered so far")
     parser.add_argument("-sch", "--schedule_path", default = None, help = "Path of your File with the Schedule")
     parser.add_argument("-P", "--period", type = float, default = None, help = "Period to be targeted with KOBEsim")
@@ -18,13 +19,27 @@ def get():
     parser.add_argument("-wh", "--whitening", default = False, help = "True to substract a linear or quadratic trend on the data before extract T with the periodogram")
     parser.add_argument("-max_da", "--max_days_apart", default = 90, type = float, help = "Maximum days apart searching for the next optimum observing date")
     parser.add_argument("-n", "--n_steps", default = 20000, type = float, help = "Number of steps for the emcee")
+    parser.add_argument("-nw", "--mult_n_walkers", default = 4, type = float, help = "Multiple of the number of parameters for the number of walkers for the emcee (Number of walkers = nw * number of parameters)")
 
     args = parser.parse_args()
 
-    try:
+
+    obs_coords = args.observatory_coordinates
+    obs_name = args.observatory_name
+    if obs_coords != None:
         lat, long, height = args.observatory_coordinates
-    except:
-        print('Observatoy coordinates are mandaroty. Provide them when calling the script as "-obs lat long height" in units deg, deg, m, respectively.')
+    elif (obs_coords == None) and (obs_name != None):
+        try:
+            if (obs_name == 'CAHA') or (obs_name == 'caha'):
+                lat, long, height = 37.22, -2.55, 2168
+            else:
+                coords = EarthLocation.of_site(obs_name)
+                lat, long, height = coords.lat.value, coords.lon.value, coords.height.value
+        except:
+            print('Observatoy name not resolved. Please, check the available observatory names at astropy.coordinates.EarthLocation.get_site_names or provide the observatory coordinates as "-obs lat long height" in units deg, deg, m, respectively.')
+            sys.exit()
+    else:
+        print('Observatoy coordinates or name are mandatory. Provide them when calling the script as "-obs LAT LON HEIGHT" in units deg, deg, m, respectively, or "-obs_n NAME".')
         sys.exit()
     star = args.star_name
     if star == None:
@@ -40,12 +55,13 @@ def get():
     t0_input = args.time_transit
     min_alt = args.minimum_altitude
     t_exp = args.t_exp
-    Nph = args.N_phases
+    Nph = int(args.N_phases)
     beta = args.beta_function_bool
     a, b = args.parameters_beta_function
     wh = args.whitening
     max_days_apart = args.max_days_apart
     n_steps = int(args.n_steps)
+    mult_nw = int(args.mult_n_walkers)
 
     def bool_str(val):
         if val == 'False' or val == False:
@@ -56,4 +72,4 @@ def get():
     beta = bool_str(beta)
     wh = bool_str(wh)
 
-    return [lat, long, height], star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, [a, b], wh, max_days_apart, n_steps
+    return [lat, long, height], star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, [a, b], wh, max_days_apart, n_steps, mult_nw
