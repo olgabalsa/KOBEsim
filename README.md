@@ -3,6 +3,6 @@ Bayesian algorithm to increase the efficiency in RV surveys. Given a hypothesis 
 
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/47603865/182014462-65794d90-bee9-4b4d-9deb-e4b4ff7bbada.png" width="500" />
+<img src="https://user-images.githubusercontent.com/47603865/182014462-65794d90-bee9-4b4d-9deb-e4b4ff7bbada.png" width="300" />
 
 
