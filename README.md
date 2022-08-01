@@ -1,5 +1,6 @@
 # KOBEsim
-Bayesian algorithm to increase the efficiency in RV surveys. Given a hypothesis of a planet orbiting at a particular period, the algorithm finds the **optimum next observing date** considering the survey's schedule. KOBEsim uses a weighted Bayes factor as metric to find a trade-off between the number of observations and the timespan required to detect the hypothetical planet (O. Balsalobre-Ruza et al., submitted).
+
+This is a Bayesian scheduler in Python for RV surveys. Once there is an emerging signal in your measurements, KOBEsim finds the optimum next observing date to maximize the efficiency confirming or discarding that periodicity (O. Balsalobre-Ruza et al., submitted).
 
 
 
@@ -7,3 +8,26 @@ Bayesian algorithm to increase the efficiency in RV surveys. Given a hypothesis 
 <img src="https://user-images.githubusercontent.com/47603865/182014462-65794d90-bee9-4b4d-9deb-e4b4ff7bbada.png" width="250" />
 
 
+## Installation
+
+You only have to download this folder or clone it to your computer.
+
+## Usage
+
+To run the code you have to provide:
+- The observatory
+- The target
+- A file with the previous data
+
+The way of calling it from the terminal is the following:
+```python
+python run_KOBEsim.py -obs_n CAHA -star hd147379 -file 'path/RVdata.ascii'
+```
+
+Or with the observatory coordinates (latitude in deg, longitude in deg, and height in m):
+
+```python
+python run_KOBEsim.py -obs_n 37.22 -2.55 2168 -star hd147379 -file 'path/RVdata.ascii'
+```
+
+You can customize the setting by giving additional inputs (see Appendix of Balsalobre-Ruza et al., submitted).
