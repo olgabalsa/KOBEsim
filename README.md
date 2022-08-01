@@ -5,7 +5,7 @@ This is a Bayesian scheduler in Python for RV surveys. Once there is an emerging
 
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/47603865/182014462-65794d90-bee9-4b4d-9deb-e4b4ff7bbada.png" width="250" />
+<img src="https://github.com/olgabalsa/KOBEsim-code/files/9234002/logo_KOBEsim.pdf" width="250" />
 
 
 ## Installation
