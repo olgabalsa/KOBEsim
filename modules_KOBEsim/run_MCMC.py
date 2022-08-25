@@ -23,20 +23,18 @@ from matplotlib.patches import ConnectionPatch
 #=====================================
 
 
-"""
-Parameters of the RV model:
----------------------------
-- Vsys: systemic velocity (m/s)
-- P: orbital period (d)
-- K: RV semi-amplitude (m/s)
-- t0: JD of conjuction (d)
-- e: eccentricity
-- w: argument of the periastron (rad)
-- m: parameter of the linear trend
-- q: parameter of the quadratic trend
------------------------------
-We use a parametrization with 1) secosw = np.sqrt(e)*np.cos(w), and 2) sesinw = np.sqrt(e)*np.sin(w) to avoid problems in the sampling since the priors of these new parameters can be gaussian centered in 0.
-"""
+#Parameters of the RV model:
+#---------------------------
+#- Vsys: systemic velocity (m/s)
+#- P: orbital period (d)
+#- K: RV semi-amplitude (m/s)
+#- t0: JD of conjuction (d)
+#- e: eccentricity
+#- w: argument of the periastron (rad)
+#- m: parameter of the linear trend
+#- q: parameter of the quadratic trend
+#-----------------------------
+#We use a parametrization with 1) secosw = np.sqrt(e)*np.cos(w), and 2) sesinw = np.sqrt(e)*np.sin(w) to avoid problems in the sampling since the priors of these new parameters can be gaussian centered in 0.
 
 
 def model_RV(Vsys, P, K, t0, secosw, sesinw, t, planet):
