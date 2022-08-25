@@ -29,7 +29,7 @@ python run_KOBEsim.py -obs_n CAHA -star hd147379 -file 'path/RVdata.ascii'
 Or with the observatory coordinates (latitude in deg, longitude in deg, and height in m):
 
 ```python
-python run_KOBEsim.py -obs_n 37.22 -2.55 2168 -star hd147379 -file 'path/RVdata.ascii'
+python run_KOBEsim.py -obs 37.22 -2.55 2168 -star hd147379 -file 'path/RVdata.ascii'
 ```
 
 You can customize the setting by giving additional inputs (see Appendix of Balsalobre-Ruza et al., submitted).
