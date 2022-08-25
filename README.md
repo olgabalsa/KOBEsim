@@ -1,6 +1,6 @@
 # KOBEsim
 
-This is a Bayesian scheduler written in Python for RV surveys. Once there is an emerging signal in your measurements, KOBEsim finds the optimum next observing date to maximize the efficiency confirming or discarding that periodicity (O. Balsalobre-Ruza et al., submitted).
+This is a Bayesian scheduler written in Python for RV surveys. Once there is an emerging signal in your data, KOBEsim finds the optimum next observing date to maximize the efficiency confirming or discarding that periodicity (O. Balsalobre-Ruza et al., submitted).
 
 
 
