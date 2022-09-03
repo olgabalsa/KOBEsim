@@ -5,8 +5,7 @@ This is a Bayesian scheduler written in Python for RV surveys. Once there is an 
 
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/47603865/188274469-e5e621ea-9115-4519-b37b-e1d399f3141f.png" width="700" />
-
+<img src="https://user-images.githubusercontent.com/47603865/188274702-4b41f705-4c27-4493-a853-eda4283b92cc.png" width="800" />
 
 
 ## Installation
