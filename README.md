@@ -8,7 +8,7 @@ This is a Bayesian scheduler written in Python for RV surveys. Once there is an 
 <img src="https://user-images.githubusercontent.com/47603865/188274702-4b41f705-4c27-4493-a853-eda4283b92cc.png" width="600" />
 
 ## Warning: 
-This documentation is under construction. We are working on provide more information on the code and its usage. If you have any question or suggestion contact me: obalsalobre@cab.inta-csic.es
+This documentation is under construction. We are working on provide more information on the code and its usage. If you have any question or suggestion, please contact me: obalsalobre@cab.inta-csic.es
   
   
 ## Installation
