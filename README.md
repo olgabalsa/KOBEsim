@@ -40,7 +40,7 @@ You can customize the setting by giving additional inputs (see Appendix of Balsa
 Please, if you use this code cite our work as: "Balsalobre-Ruza, O., Lillo-Box, J., Berihuete, A., et al. 2022, A&A, accepted
 [arXiv:2210.11207]"
 
-```python
+```
   @ARTICLE{2022arXiv221011207B,
        author = {{Balsalobre-Ruza}, O. and {Lillo-Box}, J. and {Berihuete}, A. and {Silva}, A.~M. and {Santos}, N.~C. and {Castro-Gonz{\'a}lez}, A. and {Faria}, J.~P. and {Hu{\'e}lamo}, N. and {Barrado}, D. and {Demangeon}, O.~D.~S. and {Marfil}, E. and {Aceituno}, J. and {Adibekyan}, V. and {Azzaro}, M. and {Barros}, S.~C.~C. and {Bergond}, G. and {Galad{\'\i}-Enr{\'\i}quez}, D. and {Pedraz}, S. and {Santerne}, A.},
         title = "{$\texttt{KOBEsim}$: a Bayesian observing strategy algorithm for planet detection in radial velocity blind-search surveys}",
