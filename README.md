@@ -7,14 +7,14 @@ This is a Bayesian scheduler written in Python for RV surveys. Once there is an 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/47603865/188274702-4b41f705-4c27-4493-a853-eda4283b92cc.png" width="600" />
 
-## Warning: 
-This documentation is under construction. We are working on provide more information on the code and its usage. If you have any question or suggestion, please contact me: obalsalobre@cab.inta-csic.es
+## Warning
+This documentation is under construction. We are working on provide more information on the code and its usage. If you have any question or suggestion, please contact me: obalsalobre@cab.inta-csic.es.
   
   
 ## Installation
 
 1) Download this folder or clone it to your computer.
-2) Our code makes use of Bayev ([Díaz et al. 2016](https://ui.adsabs.harvard.edu/abs/2016A%26A...585A.134D/abstract)). In order to run KOBEsim, you need to download IN THE SAME DIRECTORY THAN STEP 1 the folder available in: https://github.com/exord/bayev 
+2) Our code makes use of Bayev ([Díaz et al. 2016](https://ui.adsabs.harvard.edu/abs/2016A%26A...585A.134D/abstract)). In order to run KOBEsim, you need to download IN THE SAME DIRECTORY THAN STEP 1 the folder available in: https://github.com/exord/bayev.
 
 ## Usage
 
@@ -38,7 +38,7 @@ You can customize the setting by giving additional inputs (see Appendix of [Bals
   
 ## Citation
 Please, if you use this code cite our work as: "Balsalobre-Ruza, O., Lillo-Box, J., Berihuete, A., et al. 2022, A&A, accepted
-[arXiv:2210.11207]"
+[arXiv:2210.11207]".
 
 ```
   @ARTICLE{2022arXiv221011207B,
