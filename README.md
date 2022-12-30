@@ -14,7 +14,7 @@ This documentation is under construction. We are working on provide more informa
 ## Installation
 
 1) Download this folder or clone it to your computer.
-2) Our code makes use of Bayev ([Díaz et al. 2016](https://ui.adsabs.harvard.edu/abs/2016A%26A...585A.134D/abstract)). In order to run KOBEsim, you need to download IN THE SAME DIRECTORY THAN STEP 1 the folder available in: https://github.com/exord/bayev. This new folder must be named: *bayev*.
+2) Our code makes use of Bayev ([Díaz et al. 2016](https://ui.adsabs.harvard.edu/abs/2016A%26A...585A.134D/abstract)). In order to run KOBEsim, you need to download IN THE SAME DIRECTORY THAN STEP 1 the folder available in: https://github.com/exord/bayev. This new folder must be named *bayev*.
 
 ## Usage
 
