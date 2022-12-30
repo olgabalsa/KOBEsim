@@ -37,8 +37,7 @@ python run_KOBEsim.py -obs 37.22 -2.55 2168 -star hd147379 -file 'path/RVdata.as
 You can customize the setting by giving additional inputs (see Appendix of [Balsalobre-Ruza et al., 2022](https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract)).
   
 ## Citation
-Please, if you use this code cite our work as: "Balsalobre-Ruza, O., Lillo-Box, J., Berihuete, A., et al. 2022, A&A, accepted
-[arXiv:2210.11207]".
+Please, if you use this code cite our work as: "O. Balsalobre-Ruza, J. Lillo-Box, A. Berihuete, et al., 2023, A&A, 669, A18".
 
 ```
   @ARTICLE{2022arXiv221011207B,
