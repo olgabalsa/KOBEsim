@@ -1,6 +1,6 @@
 # KOBEsim
 
-This is a Bayesian scheduler written in Python for RV surveys. Once there is an emerging signal in your data, KOBEsim finds the optimum next observing date to maximize the efficiency confirming or discarding that periodicity ([Balsalobre-Ruza et al., 2022](https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract)).
+This is a Bayesian scheduler written in Python for RV surveys. Once there is an emerging signal in your data, KOBEsim finds the optimum next observing date to maximize the efficiency confirming or discarding that periodicity ([Balsalobre-Ruza et al., 2023](https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract)).
 
 
 
@@ -34,7 +34,7 @@ Or with the observatory coordinates (latitude in deg, longitude in deg, and heig
 python run_KOBEsim.py -obs 37.22 -2.55 2168 -star hd147379 -file 'path/RVdata.ascii'
 ```
 
-You can customize the setting by giving additional inputs (see Appendix of [Balsalobre-Ruza et al., 2022](https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract)).
+You can customize the setting by giving additional inputs (see Appendix of [Balsalobre-Ruza et al., 2023](https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract)).
   
 ## Citation
 Please, if you use this code cite our work as: "O. Balsalobre-Ruza, J. Lillo-Box, A. Berihuete, et al., 2023, A&A, 669, A18".
