@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import emcee
 import corner
-import ev
-from ev.run import run_montecarlo
+import importlib
+import bayev.lib as lib
+import bayev.perrakis as perrakis
+from bayev.run import run_montecarlo
 import radvel
 import scipy.stats as ss
 import modules_KOBEsim.SimulTime_KOBEsim as SimulTime
@@ -37,13 +39,13 @@ from matplotlib.patches import ConnectionPatch
 #We use a parametrization with 1) secosw = np.sqrt(e)*np.cos(w), and 2) sesinw = np.sqrt(e)*np.sin(w) to avoid problems in the sampling since the priors of these new parameters can be gaussian centered in 0.
 
 
-def model_RV(Vsys, P, K, t0, secosw, sesinw, t, planet):
+def model_RV(Vsys, P, K, t0, secosw, sesinw, m, q, t, planet):
     try:
         RV_array = np.zeros((len(P), len(t)))
     except:
         RV_array = np.zeros((1, len(t)))
     for i in range(RV_array.shape[0]):
-        RV = Vsys[i]
+        RV = Vsys[i] + m * (t - t0[0][0]) + q * (t - t0[0][0])**2
         if planet:
             params = radvel.model.Parameters(num_planets = 1, basis = 'per tc secosw sesinw k')
             params['per1'].value = P[i]
@@ -73,7 +75,7 @@ def log_likelihood(theta, t, rv, erv, planet, wh):
         else:
             Vsys, jitter = theta[s]
             P, K, t0, secosw, sesinw, m, q = 0, 0, 0, 0, 0, 0, 0
-        model = model_RV([Vsys], [P], [K], [t0], [secosw], [sesinw], t, planet)
+        model = model_RV([Vsys], [P], [K], [t0], [secosw], [sesinw], m, q, t, planet)
         sigma2 = erv ** 2 + jitter ** 2
         log_like[s] = -0.5 * (len(t)*np.log(2*np.pi) + np.sum((rv - model) ** 2 / sigma2 + np.log(sigma2)))
 
@@ -142,7 +144,7 @@ def fitMCMC(n_steps, mult_nw, t, rv, erv, Priors, prior_type, planet, wh = False
             p0 = p0_n
     p0 = p0.transpose()
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args = ([t, rv, erv, Priors,  prior_type, param_names, planet, wh]))
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args = ([t, rv, erv, Priors,  prior_type, param_names, planet, wh]), blobs_dtype = np.dtype('object'))
     state = sampler.run_mcmc(p0, nsteps = n_steps, progress = True)
     sampler.reset()
     sampler.run_mcmc(state.coords[np.argmax(state.log_prob)] + 1e-2 * np.random.randn(nwalkers, ndim), nsteps = int(n_steps/2), progress = True)
@@ -161,8 +163,8 @@ def fitMCMC(n_steps, mult_nw, t, rv, erv, Priors, prior_type, planet, wh = False
 
 
 def do_whitening(flatsamples_wh, rv_prewh, t):
-    Vsys, P, K, t0, secosw, sesinw, jitter, m, q = np.median(flatsamples_wh, axis=0)
-    rv_wh = rv_prewh - model_RV(0, [P], 0, [t0], [secosw], [sesinw], t, True)
+    _, _, _, _, _, _, _, m, q = np.median(flatsamples_wh, axis=0)
+    rv_wh = rv_prewh - model_RV(0, [0], 0, [0], [0], [0], m, q, t, False)
 
     return rv_wh
 
@@ -261,7 +263,7 @@ def best_lBF(n_steps, mult_nw, flatsamples_H1, lBF_init, sBF_init, schedule_JD, 
         t_new = t_cand_array[ind]
         number_phase += 1
 
-        rv_new_array = model_RV(Vsys, P, K, t0, secosw, sesinw, np.array([t_new]), True)
+        rv_new_array = model_RV(Vsys, P, K, t0, secosw, sesinw, m, q, np.array([t_new]), True)
         rv_new = rv_new_array.mean(0)
 
         erv_mcmc = rv_new_array.std(0)
