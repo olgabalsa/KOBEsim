@@ -71,6 +71,7 @@ Move to the KOBEsim directory:
 
 ```bash
 cd KOBEsim
+```
 
 Then install the required packages:
 
