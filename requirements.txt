@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+astropy
+astroquery
+astroplan
+radvel
+scipy
+emcee
+corner
