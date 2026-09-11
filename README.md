@@ -62,7 +62,7 @@ On macOS and Linux, install uv with:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-Then restart your terminal or follow the instructions displayed by the installer.
+Then **restart your terminal** or **follow the instructions displayed** by the installer.
 
 ### 4. Create the Python environment
 
