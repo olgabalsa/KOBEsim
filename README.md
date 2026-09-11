@@ -87,6 +87,7 @@ If the installation is correctly configured, this should display the available c
 
 ## Usage
 
+See a usage example in this [Jupyter notebook](https://github.com/olgabalsa/KOBEsim/blob/main/example/run_example.ipynb).
 KOBEsim requires three main inputs:
 
 * **Observatory:** either the name of a supported observatory or its coordinates.
