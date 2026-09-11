@@ -123,7 +123,7 @@ where the latitude and longitude are given in degrees and the height is given in
 For example:
 
 ```bash
-python run_KOBEsim.py -obs 37.22 -2.55 2168 -star KOBE-1 -file example/data/mock_rv_20Me_60d_first15.csv
+python run_KOBEsim.py -obs 37.22 -2.55 2168 -star KOBE-1 -file example/data/mock_rv_20Me_60d_first15.csv -n 1000 -Nph 5
 ```
 
 ### Additional options
