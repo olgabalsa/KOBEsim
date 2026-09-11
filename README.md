@@ -143,6 +143,7 @@ KOBEsim accepts RV time series provided either as a **FITS file** or as a **Text
 
 ### Text/CSV format
 
+For an example of an input file, see the [example](https://github.com/olgabalsa/KOBEsim/blob/main/example/run_example.ipynb).
 For text or CSV files, the file must contain the following three columns:
 
 | Column | Description                        |
@@ -175,8 +176,6 @@ KOBEsim also accepts FITS files containing the following columns in the first ex
 * `SPECTRO_CCF_ERV`: RV uncertainty
 
 The code converts `OBJ_DATE_BJD` to the `jd` convention used internally by adding `2400000`.
-
-For an example of an input file, see the example.
 
 ---
 
