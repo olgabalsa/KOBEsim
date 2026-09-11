@@ -16,16 +16,25 @@ from matplotlib.ticker import AutoMinorLocator
 
 
 def extract_rv(path_rv):
-    try: # FITS
-        file = fits.open(path_file)
-        jd = file[1].data['OBJ_DATE_BJD'] + 2400000
-        rv = file[1].data['SPECTRO_CCF_RV']
-        erv =  file[1].data['SPECTRO_CCF_ERV']
-    except: # ASCII
-        df_data = pd.read_csv(path_rv, names = ['jd','rv','erv'], header = 0, delimiter = " ", index_col = False, comment = '#')
-        jd = df_data.jd.values
-        rv = df_data.rv.values
-        erv = df_data.erv.values
+    """Read an RV time series from a FITS or headered text/CSV file."""
+    if path_rv.lower().endswith((".fits", ".fit", ".fts")):
+        with fits.open(path_rv) as file:
+            jd = file[1].data["OBJ_DATE_BJD"] + 2400000
+            rv = file[1].data["SPECTRO_CCF_RV"]
+            erv = file[1].data["SPECTRO_CCF_ERV"]
+    else:
+        df_data = pd.read_csv(path_rv, comment="#")
+        required_columns = {"jd", "rv", "erv"}
+        missing_columns = required_columns - set(df_data.columns)
+        if missing_columns:
+            raise ValueError(
+                f"RV file must contain columns {sorted(required_columns)}; "
+                f"missing {sorted(missing_columns)}."
+            )
+        jd = df_data["jd"].to_numpy()
+        rv = df_data["rv"].to_numpy()
+        erv = df_data["erv"].to_numpy()
+
     return jd, rv, erv
 
 

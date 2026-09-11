@@ -20,7 +20,8 @@ def get():
     parser.add_argument("-max_da", "--max_days_apart", default = 90, type = float, help = "Maximum days apart searching for the next optimum observing date")
     parser.add_argument("-n", "--n_steps", default = 20000, type = float, help = "Number of steps for the emcee")
     parser.add_argument("-nw", "--mult_n_walkers", default = 4, type = float, help = "Multiple of the number of parameters for the number of walkers for the emcee (Number of walkers = nw * number of parameters)")
-
+    parser.add_argument("-merit", "--merit_function", choices = ("BF", "eK"), default = "BF", help = "Merit function for scheduling: 'BF' maximizes the expected Bayes-factor gain; 'eK' minimizes the expected 68pc credible interval half-width of the RV semi-amplitude K. Default: BF.")
+                        
     args = parser.parse_args()
 
 
@@ -33,7 +34,7 @@ def get():
             if (obs_name == 'CAHA') or (obs_name == 'caha'):
                 lat, long, height = 37.22, -2.55, 2168
             else:
-                coords = EarthLocation.of_site(obs_name)
+                coords = EarthLocation.of_site(obs_name) # type: ignore
                 lat, long, height = coords.lat.value, coords.lon.value, coords.height.value
         except:
             print('Observatoy name not resolved. Please, check the available observatory names at astropy.coordinates.EarthLocation.get_site_names or provide the observatory coordinates as "-obs lat long height" in units deg, deg, m, respectively.')
@@ -72,4 +73,6 @@ def get():
     beta = bool_str(beta)
     wh = bool_str(wh)
 
-    return [lat, long, height], star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, [a, b], wh, max_days_apart, n_steps, mult_nw
+    merit_f = args.merit_function
+
+    return [lat, long, height], star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, [a, b], wh, max_days_apart, n_steps, mult_nw, merit_f

@@ -16,6 +16,8 @@ def time_sim(min_alt, t_exp, obs, star, schedule_JD, t0, P, t, N_phases, max_day
     Obs_loc = EarthLocation(lat = obs[0]*u.deg, lon = obs[1]*u.deg, height = obs[2]*u.m)
     Observatory_class = Observer(Obs_loc)
     t_exp = t_exp/(24*3600)       # from s to jd
+
+    print(f"{star}: resolving target coordinates with SIMBAD...")
     tar = Simbad.query_object(star)
     RA, DEC = tar['RA'][0], tar['DEC'][0]
     coord = SkyCoord(f'{RA} {DEC}', unit = (u.hourangle, u.deg))
@@ -27,9 +29,21 @@ def time_sim(min_alt, t_exp, obs, star, schedule_JD, t0, P, t, N_phases, max_day
 
     t_now = Time(Time.now(), scale = 'utc').jd
     t_start = max(t_now, t[-1]) + 1
+
+    print(
+    f"{star}: searching observable dates for up to "
+    f"{max_days_apart} days and {N_phases} orbital phases...")
     day = int(t_start)
 
     while ((not np.all(phase_array)) & (day < t_start + max_days_apart)) | (sum(phase_array != 0) < 1): # Not going too far condition: continue searching for candidate dates if 1) we are not max_days_apart days further away and still orbital phases posibilities empty, or 2) just 1 date as possible even if we are more than max_days_apart days away
+
+        if (day - int(t_start)) % 10 == 0:
+            n_found = np.count_nonzero(phase_array)
+            print(
+                f"{star}: visibility search — day {day - int(t_start):d}/"
+                f"{int(max_days_apart):d}, phases found: {n_found}/{N_phases}"
+            )
+
         if schedule_JD != None:
             if (day < schedule_JD[-1].value) and (day not in schedule_JD):  # If the candidate day is before the ending of the schedule, check if it is assigned
                 day += 1
@@ -49,4 +63,7 @@ def time_sim(min_alt, t_exp, obs, star, schedule_JD, t0, P, t, N_phases, max_day
                 t_cand[index_phase] = tw_ev
         day += 1
 
+    print(
+    f"{star}: visibility search completed — "
+    f"{np.count_nonzero(phase_array)}/{N_phases} phases found.")
     return phase_array, t_cand

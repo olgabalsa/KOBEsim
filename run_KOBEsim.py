@@ -27,6 +27,7 @@ INPUT Parameters
 - max_da: maximum days apart to search for the next optimum observing date. Default: 90 d.
 - n: number of steps per walker for the emcee warm-up phase. Default: 20 000
 - nw: multiple of the number of parameters for the number of walkers (Number of walkers = nw * number of parameters). Default: 4.
+- merit: Merit function for scheduling: 'BF' maximizes the expected Bayes-factor gain; 'eK' minimizes the expected 68pc credible interval half-width of the RV semi-amplitude K. Default: BF.
 
 *: Mandatory inputs.
 (*): One of the two options is mandatory.
@@ -45,7 +46,7 @@ NOTE: hereafter lBF is ln(B_10) = ln(evidence_planet_hypothesys) - ln(evidence_n
 
 #            Inputs
 #---------------------------------
-obs, star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, beta_param, wh, max_days_apart, n_steps, mult_nw = inputs.get()
+obs, star, path_rv, path_sch, P_peak, t0_input, min_alt, t_exp, Nph, beta, beta_param, wh, max_days_apart, n_steps, mult_nw, merit_f = inputs.get()
 schedule_JD = ext_data.extract_schedule(path_sch)
 jd, rv, erv = ext_data.extract_rv(path_rv)
 
@@ -83,32 +84,54 @@ else:
 Priors, prior_type = Prior_def(jd, t0_input, P_peak)
 
 
-# Initial lBF
-print(f'Fit H0 and H1 models for {star} data')
-flatsamples_H1, ev_H1_init, rv_wh, paramnamesH1 = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, planet = True, wh = wh)
+# Initial MCMC
+if merit_f == 'BF':
+    print(f'Fit H0 and H1 models for {star} data')
+
+flatsamples_H1, merit_f_val_init_H1, rv_wh, paramnamesH1 = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, merit_f, planet = True, wh = wh)
 if wh and not P_peak_from_periodogram:   # If P_peak_from_periodogram, prewhitening already done
     rv = rv_wh
-    flatsamples_H1, ev_H1_init, _, paramnamesH1 = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, planet = True)
-
-flatsamples_H0, ev_H0_init, _, _ = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, planet = False)
+    flatsamples_H1, merit_f_val_init_H1, _, paramnamesH1 = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, merit_f, planet = True)
 
 # Fit and Corner plots
 run_MCMC.plot_fitMCMC(jd, rv, erv, star, flatsamples_H1, paramnamesH1, wh)
 
-lBF_init = np.median(ev_H1_init) - np.median(ev_H0_init)
-slBF_init = np.sqrt(np.std(ev_H1_init)**2 + np.std(ev_H0_init)**2)
-print(f'Initial ln(B01) = {round(lBF_init,3)} +- {round(slBF_init,3)}')
+if merit_f == 'BF':
+    flatsamples_H0, ev_H0_init, _, _ = run_MCMC.fitMCMC(n_steps, mult_nw, jd, rv, erv, Priors, prior_type, merit_f, planet = False)
+    lBF_init = np.median(merit_f_val_init_H1) - np.median(ev_H0_init)
+    slBF_init = np.sqrt(np.std(merit_f_val_init_H1)**2 + np.std(ev_H0_init)**2)
+    print(f'Initial ln(B01) = {round(lBF_init, 3)} +- {round(slBF_init, 3)}')
 
+elif merit_f == 'eK':
+    eK_init = merit_f_val_init_H1
+    print(f'Initial eK = {round(eK_init, 3)}')
+    
 
 # Select best next phase to observe
-n_phase_cand, lBF_cand, slBF_cand, best_phase, best_t, priority =  run_MCMC.best_lBF(n_steps, mult_nw, flatsamples_H1, lBF_init, slBF_init, schedule_JD, jd, rv, erv, Priors, prior_type, min_alt, t_exp, obs, star, Nph, beta, beta_param, max_days_apart)
+if merit_f == 'BF':
+    n_phase_cand, lBF_cand, slBF_cand, best_phase, best_t, priority =  run_MCMC.best_lBF(
+        n_steps, mult_nw, flatsamples_H1, lBF_init, slBF_init,
+        schedule_JD, jd, rv, erv, Priors, prior_type, min_alt,
+        t_exp, obs, star, Nph, beta, beta_param, max_days_apart, wh)
+
+elif merit_f == 'eK':
+    n_phase_cand, eK_cand, best_phase, best_t, priority = run_MCMC.best_eK(
+        n_steps, mult_nw, flatsamples_H1, eK_init,
+        schedule_JD, jd, rv, erv, Priors, prior_type, min_alt,
+        t_exp, obs, star, Nph, beta, beta_param, max_days_apart, wh)
+
 ind_best = np.where(n_phase_cand == best_phase)[0][0]
 cday = Time(math.floor(best_t), format = 'jd', scale = 'utc').isot[:10]
-run_MCMC.plot_bestlBF(n_phase_cand, lBF_cand, slBF_cand, lBF_cand[ind_best], lBF_cand - lBF_init, np.sqrt(slBF_cand**2 + slBF_init**2), cday, priority, star, rv, wh)
+
+if merit_f == 'BF':
+    run_MCMC.plot_bestlBF(n_phase_cand, lBF_cand, slBF_cand, lBF_init, lBF_cand - lBF_init, np.sqrt(slBF_cand**2 + slBF_init**2), cday, priority, star, rv, wh)
 
 print(f'TARGET {star}')
 print('-------------------------')
 print(f'Optimum phase = {round(best_phase,3)}')
 print(f'Optimum next observing date around {round(best_t,3)} JD -> {cday}')
-print(f'Predicted Deltaln(B01) = {round(lBF_cand[ind_best] - lBF_init,3)} +- {round(np.sqrt(slBF_cand[ind_best]**2 + slBF_init**2),3)}')
-print(f'Predicted ln(B01) = {round(lBF_cand[ind_best],3)} +- {round(slBF_cand[ind_best],3)}')
+if merit_f == 'BF':
+    print(f'Predicted Deltaln(B01) = {round(lBF_cand[ind_best] - lBF_init,3)} +- {round(np.sqrt(slBF_cand[ind_best]**2 + slBF_init**2),3)}')
+    print(f'Predicted ln(B01) = {round(lBF_cand[ind_best],3)} +- {round(slBF_cand[ind_best],3)}')
+elif merit_f == 'eK':
+    print(f'Predicted eK = {round(eK_cand[ind_best], 3)}')
