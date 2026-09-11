@@ -8,3 +8,4 @@ radvel
 scipy
 emcee
 corner
+tqdm
