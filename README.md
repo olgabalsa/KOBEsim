@@ -1,6 +1,6 @@
 # KOBEsim
 
-**KOBEsim** is a Bayesian scheduler written in Python for radial-velocity (RV) surveys. Once an emerging signal is identified in your data, KOBEsim finds the optimum next observing date to maximize the efficiency of confirming or discarding the periodicity as a Keplerian signal.
+**KOBEsim** is a Bayesian scheduler written in Python for radial velocity (RV) surveys. Once an emerging signal is identified in your data, KOBEsim finds the optimum next observing date to maximize the efficiency of confirming or discarding the periodicity as a Keplerian signal.
 
 For a description of the method, see [Balsalobre-Ruza et al. (2023)]([https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract](https://ui.adsabs.harvard.edu/abs/2023A%26A...669A..18B/abstract)).
 
