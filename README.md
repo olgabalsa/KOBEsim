@@ -56,13 +56,12 @@ The directory containing the Bayev code must be named `bayev`.
 
 ### 3. Install uv
 
-KOBEsim uses uv to create the Python environment and ensure that the required Python version is used.
+Use uv to create the Python environment and ensure that the required Python version is used.
 
 On macOS and Linux, install uv with:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-
 Then restart your terminal or follow the instructions displayed by the installer.
 
 ### 4. Create the Python environment
@@ -71,11 +70,11 @@ From the KOBEsim directory, create a virtual environment using Python 3.10:
 ```bash
 uv venv --python 3.10 kobesim-env
 ```
+uv will automatically download Python 3.10 if it is not already available on your computer.
 
 Activate the environment:
 ```bash
 source kobesim-env/bin/activate
-uv will automatically download Python 3.10 if it is not already available on your computer.
 ```
 
 ### 5. Install the Python dependencies
