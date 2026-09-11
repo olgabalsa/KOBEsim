@@ -38,17 +38,17 @@ Alternatively, you can download the repository as a ZIP file from GitHub.
 
 KOBEsim makes use of **Bayev** ([Díaz et al. 2016](https://ui.adsabs.harvard.edu/abs/2016A%26A...585A.134D/abstract)) to compute the Bayes Factor based on the Perrakis estimator.
 
-Clone the Bayev repository separately:
+Clone the Bayev repository separately, inside KOBEsim repository:
 
 ```bash
+cd KOBEsim
 git clone https://github.com/exord/bayev.git
 ```
 
-The two repositories must be located in the **same parent directory**:
+The repositories must be organized as follows:
 
 ```text
-parent_directory/
-├── KOBEsim/
+KOBEsim/
 └── bayev/
 ```
 
@@ -66,12 +66,6 @@ source kobesim-env/bin/activate
 ```
 
 ### 4. Install the Python dependencies
-
-Move to the KOBEsim directory:
-
-```bash
-cd KOBEsim
-```
 
 Then install the required packages:
 
@@ -97,14 +91,14 @@ KOBEsim requires three main inputs:
 
 * **Observatory:** either the name of a supported observatory or its coordinates.
 * **Target:** the name of the target star (to be resolve by SIMBAD).
-* **Previous RV data:** a file containing the radial-velocity measurements obtained so far.
+* **Previous RV data:** a file containing the RV measurements obtained so far.
 
 ### Using a predefined observatory
 
 For observatories included in KOBEsim, specify the observatory name with `-obs_n`:
 
 ```bash
-python run_KOBEsim.py -obs_n CAHA -star hd147379 -file path/RVdata.ascii
+python run_KOBEsim.py -obs_n CAHA -star KOBE-1 -file example/data/mock_rv_20Me_60d_first15.csv
 ```
 
 ### Providing observatory coordinates
@@ -120,16 +114,16 @@ where the latitude and longitude are given in degrees and the height is given in
 For example:
 
 ```bash
-python run_KOBEsim.py -obs 37.22 -2.55 2168 -star hd147379 -file path/RVdata.ascii
+python run_KOBEsim.py -obs 37.22 -2.55 2168 -star KOBE-1 -file example/data/mock_rv_20Me_60d_first15.csv
 ```
 
 ### Additional options
 
 KOBEsim allows the user to customize the observing strategy through additional command-line arguments.
 
-For a complete description of the available parameters and their recommended use, see the Appendix of [Balsalobre-Ruza et al. (2023)](https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract).
+For a more complete description of the available parameters and their recommended use, see the Appendix of [Balsalobre-Ruza et al. (2023)](https://ui.adsabs.harvard.edu/abs/2022arXiv221011207B/abstract).
 
-You can also display the available command-line options with:
+To have the most updated list, you can display the available command-line options with:
 
 ```bash
 python run_KOBEsim.py --help
@@ -143,7 +137,7 @@ KOBEsim accepts RV time series provided either as a **FITS file** or as a **Text
 
 ### Text/CSV format
 
-For an example of an input file, see the [example](https://github.com/olgabalsa/KOBEsim/blob/main/example/run_example.ipynb).
+For an example of an input file, see the [example](https://github.com/olgabalsa/KOBEsim/blob/main/example/create_dataset_example.ipynb).
 For text or CSV files, the file must contain the following three columns:
 
 | Column | Description                        |
@@ -192,7 +186,7 @@ Both outputs are automatically saved in an `outputs/` directory created in the c
 ```text
 outputs/
 ├── [CSV output file]
-└── [output plot]
+└── [output plots]
 ```
 
 The CSV file can be used to inspect and further analyze the ranking of the proposed observing dates, while the plot provides a visual representation of the expected gain in the Bayes Factor across the tested orbital phases.
