@@ -61,7 +61,7 @@ We recommend using a dedicated Python environment to avoid conflicts with other 
 For example:
 
 ```bash
-python -m venv kobesim-env
+python3.10 -m venv kobesim-env
 source kobesim-env/bin/activate
 ```
 
