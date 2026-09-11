@@ -29,7 +29,7 @@ KOBEsim requires:
 Clone this repository to your computer:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/KOBEsim.git
+git clone https://github.com/olgabalsa/KOBEsim.git
 ```
 
 Alternatively, you can download the repository as a ZIP file from GitHub.
