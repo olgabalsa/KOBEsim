@@ -18,7 +18,7 @@ KOBEsim requires:
 * The Python packages listed in [`requirements.txt`](requirements.txt)
 * [Bayev](https://github.com/exord/bayev), which is maintained as a separate repository
 
-> **Important:** `bayev` must be downloaded separately and placed alongside the KOBEsim repository, as described below.
+> **Important:** `bayev` must be downloaded separately and placed within the KOBEsim repository, as described below.
 
 ---
 
@@ -107,7 +107,7 @@ KOBEsim requires three main inputs:
 For observatories included in KOBEsim, specify the observatory name with `-obs_n`:
 
 ```bash
-python run_KOBEsim.py -obs_n CAHA -star KOBE-1 -file example/data/mock_rv_20Me_60d_first15.csv
+python run_KOBEsim.py -obs_n CAHA -star KOBE-1 -file example/data/mock_rv_20Me_60d_first15.csv -n 1000 -Nph 5
 ```
 
 ### Providing observatory coordinates
