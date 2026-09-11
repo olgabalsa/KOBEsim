@@ -14,7 +14,7 @@ For a description of the method, see [Balsalobre-Ruza et al. (2023)]([https://ui
 
 KOBEsim requires:
 
-* Python >3.10
+* Python 3.10.x
 * The Python packages listed in [`requirements.txt`](requirements.txt)
 * [Bayev](https://github.com/exord/bayev), which is maintained as a separate repository
 
@@ -54,36 +54,24 @@ KOBEsim/
 
 The directory containing the Bayev code must be named `bayev`.
 
-### 3. Create a Python environment
-
-We recommend using a dedicated Python environment to avoid conflicts with other projects.
-
-For example:
-
-```bash
-python3.10 -m venv kobesim-env
+3. Install uv
+KOBEsim uses uv to create the Python environment and ensure that the required Python version is used.
+On macOS and Linux, install uv with:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+Then restart your terminal or follow the instructions displayed by the installer.
+4. Create the Python environment
+From the KOBEsim directory, create a virtual environment using Python 3.10:
+uv venv --python 3.10 kobesim-env
+Activate the environment:
 source kobesim-env/bin/activate
-```
-
-### 4. Install the Python dependencies
-
-Then install the required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Check the installation
-
+uv will automatically download Python 3.10 if it is not already available on your computer.
+5. Install the Python dependencies
+Install the required packages:
+uv pip install -r requirements.txt
+6. Check the installation
 From the KOBEsim directory, run:
-
-```bash
 python run_KOBEsim.py --help
-```
-
 If the installation is correctly configured, this should display the available command-line options.
-
----
 
 ## Usage
 
